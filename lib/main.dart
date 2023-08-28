@@ -1,153 +1,125 @@
-import 'dart:io';
-
-import 'package:fluent_reader_lite/models/service.dart';
-import 'package:fluent_reader_lite/pages/article_page.dart';
-import 'package:fluent_reader_lite/pages/error_log_page.dart';
-import 'package:fluent_reader_lite/pages/settings/about_page.dart';
-import 'package:fluent_reader_lite/pages/home_page.dart';
-import 'package:fluent_reader_lite/pages/settings/feed_page.dart';
-import 'package:fluent_reader_lite/pages/settings/general_page.dart';
-import 'package:fluent_reader_lite/pages/settings/reading_page.dart';
-import 'package:fluent_reader_lite/pages/settings/services/feedbin_page.dart';
-import 'package:fluent_reader_lite/pages/settings/services/fever_page.dart';
-import 'package:fluent_reader_lite/pages/settings/services/greader_page.dart';
-import 'package:fluent_reader_lite/pages/settings/services/inoreader_page.dart';
-import 'package:fluent_reader_lite/pages/settings/source_edit_page.dart';
-import 'package:fluent_reader_lite/pages/settings/sources_page.dart';
-import 'package:fluent_reader_lite/pages/settings_page.dart';
-import 'package:fluent_reader_lite/utils/global.dart';
-import 'package:fluent_reader_lite/utils/store.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'generated/l10n.dart';
-import 'models/global_model.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  Store.sp = await SharedPreferences.getInstance();
-  Global.init();
-  if (Platform.isAndroid) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-    ));
-    WebView.platform = SurfaceAndroidWebView();
-  }
-  runApp(MyApp());
-  SystemChannels.lifecycle.setMessageHandler((msg) {
-    if (msg == AppLifecycleState.resumed.toString()) {
-      if (Global.server != null) Global.server.restart();
-      if (Global.globalModel.syncOnStart &&
-          DateTime.now().difference(Global.syncModel.lastSynced).inMinutes >=
-              10) {
-        Global.syncModel.syncWithService();
-      }
-    }
-    return null;
-  });
+void main() {
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  static final Map<String, Widget Function(BuildContext)> baseRoutes = {
-    "/article": (context) => ArticlePage(),
-    "/error-log": (context) => ErrorLogPage(),
-    "/settings": (context) => SettingsPage(),
-    "/settings/sources": (context) => SourcesPage(),
-    "/settings/sources/edit": (context) => SourceEditPage(),
-    "/settings/feed": (context) => FeedPage(),
-    "/settings/reading": (context) => ReadingPage(),
-    "/settings/general": (context) => GeneralPage(),
-    "/settings/about": (context) => AboutPage(),
-    "/settings/service/fever": (context) => FeverPage(),
-    "/settings/service/feedbin": (context) => FeedbinPage(),
-    "/settings/service/inoreader": (context) => InoreaderPage(),
-    "/settings/service/greader": (context) => GReaderPage(),
-    "/settings/service": (context) {
-      var serviceType =
-          SyncService.values[Store.sp.getInt(StoreKeys.SYNC_SERVICE) ?? 0];
-      switch (serviceType) {
-        case SyncService.None:
-          break;
-        case SyncService.Fever:
-          return FeverPage();
-        case SyncService.Feedbin:
-          return FeedbinPage();
-        case SyncService.GReader:
-          return GReaderPage();
-          break;
-        case SyncService.Inoreader:
-          return InoreaderPage();
-          break;
-      }
-      return AboutPage();
-    }
-  };
+  const MyApp({super.key});
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: Global.globalModel),
-        ChangeNotifierProvider.value(value: Global.sourcesModel),
-        ChangeNotifierProvider.value(value: Global.itemsModel),
-        ChangeNotifierProvider.value(value: Global.feedsModel),
-        ChangeNotifierProvider.value(value: Global.groupsModel),
-        ChangeNotifierProvider.value(value: Global.syncModel),
-      ],
-      child: Consumer<GlobalModel>(
-        builder: (context, globalModel, child) => CupertinoApp(
-          title: "Fluent Reader",
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: [
-            // ... app-specific localization delegate[s] here
-            S.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        // This is the theme of your application.
+        //
+        // TRY THIS: Try running your application with "flutter run". You'll see
+        // the application has a blue toolbar. Then, without quitting the app,
+        // try changing the seedColor in the colorScheme below to Colors.green
+        // and then invoke "hot reload" (save your changes or press the "hot
+        // reload" button in a Flutter-supported IDE, or press "r" if you used
+        // the command line to start the app).
+        //
+        // Notice that the counter didn't reset back to zero; the application
+        // state is not lost during the reload. To reset the state, use hot
+        // restart instead.
+        //
+        // This works for code too, not just values: Most code changes can be
+        // tested with just a hot reload.
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(title: 'Open News'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
+
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
+
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
+      body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
+        child: Column(
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          //
+          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+          // action in the IDE, or press "p" in the console), to see the
+          // wireframe for each widget.
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'You have pushed the button this many times:',
+            ),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ],
-          locale: globalModel.locale,
-          supportedLocales: [
-            const Locale("de"),
-            const Locale("en"),
-            const Locale("es"),
-            const Locale("zh"),
-            const Locale("fr"),
-            const Locale("uk"),
-            const Locale("hr"),
-            const Locale("pt"),
-          ],
-          localeResolutionCallback: (_locale, supportedLocales) {
-            _locale = Locale(_locale.languageCode);
-            if (globalModel.locale != null)
-              return globalModel.locale;
-            else if (supportedLocales.contains(_locale))
-              return _locale;
-            else
-              return Locale("en");
-          },
-          theme: CupertinoThemeData(
-            primaryColor: CupertinoColors.systemBlue,
-            brightness: globalModel.getBrightness(),
-          ),
-          routes: {
-            "/": (context) => CupertinoScaffold(body: HomePage()),
-            ...baseRoutes,
-          },
-          builder: (context, child) {
-            final mediaQueryData = MediaQuery.of(context);
-            if (Global.globalModel.textScale == null) return child;
-            return MediaQuery(
-                data: mediaQueryData.copyWith(
-                    textScaleFactor: Global.globalModel.textScale),
-                child: child);
-          },
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
